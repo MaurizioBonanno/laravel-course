@@ -1,6 +1,12 @@
 @extends('templetes.layout')
 
 @section('content')
+<h1>Albums</h1>
+    @if(session()->has('message'))
+       <div class="alert-info alert-dismissible fade show">
+           {{session()->get('message')}}
+       </div>
+    @endif
 <form>
 <input type="hidden" name='_token' id='_token' value="{{csrf_token()}}">
 <ul class='list-group'>
@@ -28,7 +34,7 @@ $('document').ready(function(){
     $('ul.list-group').on('click','a.btn-danger',function(ele){
         ele.preventDefault();
         var url = $(this).attr('href');
-        var li = ele.target.parentNode;
+        var li = ele.target.parentNode.parentNode;
         $.ajax(url,
         {
             method: 'DELETE',
