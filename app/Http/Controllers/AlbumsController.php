@@ -8,11 +8,31 @@ use Illuminate\Support\Facades\DB;
 
 class AlbumsController extends Controller
 {
+
+    public function processFile($id, $req, &$album){
+
+        if(!$req->hasFile('album_thumb')){
+            return false;
+        }
+
+
+            $file = $req->file('album_thumb');
+            if ($file->isValid()) {
+                $fileName = $file->store(env('ALBUM_THUMBS_DIR'), 'public');
+                $album->album_thumb = $fileName;
+            }
+
+            return true;
+
+    }
+
+
     public function index( Request $request ){
        // return Album::all();
 
      //  $sql = 'select * from Albums where 1=1';
-    $sql = DB::table('albums')->orderByDesc('id');
+    // $sql = DB::table('albums')->orderByDesc('id');
+    $sql= Album::orderBy('id','desc');
     if($request->has('id')){
         $sql->where('id','=',$request->input('id'));
       }
@@ -47,7 +67,8 @@ class AlbumsController extends Controller
     //     //dd($sql);
     //   return DB::delete($sql, ['id'=>$id]);
     //     //return redirect()->back();
-        $res = DB::table('albums')->where('id',$id)->delete();
+     //   $res = DB::table('albums')->where('id',$id)->delete();
+     $res = Album::where('id',$id)->delete();
         return $res;
     }
 
@@ -57,10 +78,12 @@ class AlbumsController extends Controller
     }
 
     public function edit($id){
-        $sql="select * from albums where id = :id";
-        $album = DB::select($sql,['id'=>$id]);
+        // $sql="select * from albums where id = :id";
+        // $album = DB::select($sql,['id'=>$id]);
         //dd($album);
-        return view('albums.edit')->with('album',$album[0]);
+        $album = Album::find($id);
+        // return view('albums.edit')->with('album',$album[0]);
+        return view('albums.edit')->with('album',$album);
     }
 
     public function store($id,Request $req){
@@ -73,12 +96,33 @@ class AlbumsController extends Controller
     //    //dd($sql);
     //    $res = DB::update($sql, $data);
 
-       $res = DB::table('albums')->where('id',$id)->update(
-           [
-               'album_name' => request()->input('name'),
-               'description' => request()->input('description')
-            ]
-           );
+    //    $res = DB::table('albums')->where('id',$id)->update(
+    //        [
+    //            'album_name' => request()->input('name'),
+    //            'description' => request()->input('description')
+    //         ]
+    //        );
+    //   $res = Album::where('id',$id)
+    //     ->update(
+    //         [
+    //             'album_name'=> request()->input('name'),
+    //             'description' => request()->input('description')
+    //         ]
+    //     );
+
+    $album = Album::find($id);
+    $album->album_name = request()->input('name');
+    $album->description = request()->input('description');
+    // if($req->hasFile('album_thumb')){
+    //     $file = $req->file('album_thumb');
+    //     if ($file->isValid()) {
+    //         $fileName = $file->store(env('ALBUM_THUMBS_DIR'), 'public');
+    //         $album->album_thumb = $fileName;
+    //     }
+    // }
+    $this->processFile($id,$req,$album);
+    $res = $album->save();
+
        $messaggio = $res ? 'Album aggiornato' : 'Aggiornamento non eseguito';
        session()->flash('message', $messaggio);
        return redirect()->route('albums');
@@ -95,13 +139,33 @@ class AlbumsController extends Controller
         // $data['user_id'] = 1;
         // $sql= 'insert into albums (album_name,description,user_id) values (:name,:description,:user_id)';
         // $res = DB::insert($sql,$data);
-        $res = DB::table('albums')->insert(
-            [
-                'album_name' => request()->input('name'),
-                'description' => request()->input('description'),
-                'user_id'=>1
-             ]
-            );
+        // $res = DB::table('albums')->insert(
+        //     [
+        //         'album_name' => request()->input('name'),
+        //         'description' => request()->input('description'),
+        //         'user_id'=>1
+        //      ]
+        //     );
+
+            // $res = Album::insert(
+            //     [
+            //         'album_name' => request()->input('name'),
+            //         'description' => request()->input('description'),
+            //         'user_id'=>1
+            //      ]
+            //     );
+        $album = new Album();
+        $album->album_name = request()->input('name');
+        $album->description = request()->input('description');
+        $album->user_id = 1;
+
+        $res= $album->save();
+        if($res){
+           if($this->processFile($album->id, request() ,$album)){
+               $album->save();
+           }
+        }
+
         $messaggio = $res ? 'Album inserito' : 'Inserimento non eseguito';
         session()->flash('message', $messaggio);
         return redirect()->route('albums');

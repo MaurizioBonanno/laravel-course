@@ -15,6 +15,10 @@
     <li class="list-group-item justify-content-between">({{$album->id}}) {{$album->album_name}}
 
          <div>
+             @if ($album->album_thumb)
+         <img width=120 src="{{asset($album->path)}}" alt="" srcset="">
+
+             @endif
           <a href="albums/{{$album->id}}/edit" class="btn btn-primary btn-small">edit</a>
           <a href="albums/{{$album->id}}" class="btn btn-danger btn-small">Delete</a>
         </div>

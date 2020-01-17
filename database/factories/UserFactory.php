@@ -33,7 +33,8 @@ $factory->define(App\Models\Album::class, function (Faker $faker) {
         'album_name' => $faker->name,
         'description' => $faker->text(128),
         //'user_id' => User::first()->id
-        'user_id'=>User::inRandomOrder()->first()->id
+        'user_id'=>User::inRandomOrder()->first()->id,
+        'album_thumb' => $faker->imageUrl(120,120,$faker->randomElement(['cats','abstract']))
     ];
 });
 
